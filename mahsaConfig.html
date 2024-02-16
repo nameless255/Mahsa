@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decryption Tool</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            padding: 20px;
+        }
+        .tool {
+            background-color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .input-group textarea,
+        .output-container textarea {
+            resize: none;
+        }
+        .output-container {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+
+                <!-- Decryptor Tool -->
+                <div class="tool">
+                    <h2 class="mb-4 text-center">MahsaNG Decryptor</h2>
+                    <div class="input-group mb-3">
+                        <textarea class="form-control" id="encryptedText1" rows="5" placeholder="Paste the encrypted text here..."></textarea>
+                    </div>
+                    <button class="btn btn-primary btn-block mb-2" onclick="decrypt1()">Decrypt</button>
+                    <div class="output-container">
+                        <textarea class="form-control" id="output1" rows="5" readonly></textarea>
+                        <button class="btn btn-secondary copy-button" onclick="copyToClipboard('output1')">Copy</button>
+                    </div>
+                </div>
+
+                <!-- Fetch and Decrypt 1 Tool -->
+                <div class="tool">
+                    <h2 class="mb-4 text-center">Get EMS Config</h2>
+                    <button class="btn btn-primary btn-block mb-2" onclick="fetchAndDecrypt1()">Fetch and Decrypt</button>
+                    <div class="output-container">
+                        <textarea class="form-control" id="output2" rows="5" readonly></textarea>
+                        <button class="btn btn-secondary copy-button" onclick="copyToClipboard('output2')">Copy</button>
+                    </div>
+                </div>
+
+                <!-- Fetch and Decrypt 2 Tool -->
+                <div class="tool">
+                    <h2 class="mb-4 text-center">Get Free config</h2>
+                    <button class="btn btn-primary btn-block mb-2" onclick="fetchAndDecrypt2()">Fetch and Decrypt</button>
+                    <div class="output-container">
+                        <textarea class="form-control" id="output3" rows="5" readonly></textarea>
+                        <button class="btn btn-secondary copy-button" onclick="copyToClipboard('output3')">Copy</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <script>
+        function decrypt1() {
+            var key = CryptoJS.enc.Utf8.parse("ca815ecfdb1f153a");
+            var iv = CryptoJS.enc.Utf8.parse("lvcas56410c97lpb");
+            var encryptedText = document.getElementById("encryptedText1").value;
+            var ciphertext = CryptoJS.enc.Base64.parse(encryptedText);
+            var decrypted = CryptoJS.AES.decrypt({ ciphertext: ciphertext }, key, {
+                iv: iv,
+                padding: CryptoJS.pad.Pkcs7,
+                mode: CryptoJS.mode.CBC
+            });
+            var plaintext = decrypted.toString(CryptoJS.enc.Utf8);
+            var json = JSON.parse(plaintext);
+            var urls = json.configs.map(function(config) {
+                return config.url;
+            });
+            document.getElementById("output1").value = urls.join("\n");
+        }
+
+        function fetchAndDecrypt1() {
+            var key = "f430480014825ddb";
+            var iv = "Xvc1wOrxs77Ilj0N";
+            var url = "https://raw.githubusercontent.com/GFW-knocker/MahsaNG/master/mahsa_EMS_accounts.json";
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.text();
+                })
+                .then(encryptedText => {
+                    var ciphertext = CryptoJS.enc.Base64.parse(encryptedText);
+                    var decrypted = CryptoJS.AES.decrypt({ ciphertext: ciphertext }, CryptoJS.enc.Utf8.parse(key), {
+                        iv: CryptoJS.enc.Utf8.parse(iv),
+                        padding: CryptoJS.pad.Pkcs7,
+                        mode: CryptoJS.mode.CBC
+                    });
+                    var plaintext = decrypted.toString(CryptoJS.enc.Utf8);
+                    var json = JSON.parse(plaintext);
+                    var urls = json.map(function(item) {
+                        return item.url || "Error: 'url' key not found in the decrypted JSON.";
+                    });
+                    document.getElementById("output2").value = urls.join("\n");
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                    document.getElementById("output2").value = "Error: " + error.message;
+                });
+        }
+
+        function fetchAndDecrypt2() {
+            var key = "ca815ecfdb1f153a";
+            var iv = "lvcas56410c97lpb";
+            var url = "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/app/sub.txt";
+            fetch(url, {
+                headers: {
+                    'User-Agent': "Dalvik/2.1.0 (Linux; U; Android 13; M2012K11AG Build/TKQ1.220829.002)",
+                    'Connection': "Keep-Alive",
+                    'Accept-Encoding': "gzip"
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.text();
+                })
+                .then(encryptedText => {
+                    var keyHex = CryptoJS.enc.Utf8.parse(key);
+                    var ivHex = CryptoJS.enc.Utf8.parse(iv);
+                    var decrypted = CryptoJS.AES.decrypt(encryptedText, keyHex, { iv: ivHex, padding: CryptoJS.pad.Pkcs7 });
+                    var decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+                    var json = JSON.parse(decryptedText);
+                    var urls = json.mci.map(function(item) {
+                        return item.config || "Error: 'config' key not found in the decrypted JSON.";
+                    });
+                    document.getElementById("output3").value = urls.join("\n");
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                    document.getElementById("output3").value = "Error: " + error.message;
+                });
+        }
+
+        function copyToClipboard(elementId) {
+            var copyText = document.getElementById(elementId);
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            alert("Copied the text: " + copyText.value);
+        }
+    </script>
+</body>
+</html>
